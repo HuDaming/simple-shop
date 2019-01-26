@@ -1,0 +1,16 @@
+/node_modules
+/public/hot
+/public/storage
+/public/js
+/public/css
+/public/fonts
+/storage/*.key
+/vendor
+/.idea
+.env
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/public/mix-manifest.json
