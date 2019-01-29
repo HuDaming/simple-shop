@@ -6,27 +6,34 @@ use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\ProductSku;
 use App\Models\Order;
+use App\Models\CouponCode;
 use App\Jobs\CloseOrder;
 use App\Exceptions\InvalidRequestException;
+use App\Exceptions\CouponCodeUnavailableException;
 use Carbon\Carbon;
 
 class OrderService
 {
-    public function store(User $user, UserAddress $address, $remark, $items)
+    public function store(User $user, UserAddress $address, $remark, $items, CouponCode $coupon = null)
     {
+        // 如果使用了优惠券，则先校验优惠券的有效性
+        if ($coupon) {
+            $coupon->checkAvailable();
+        }
+
         // 开启一个数据库事务
-        $order = \DB::transaction(function () use ($user, $address, $remark, $items) {
+        $order = \DB::transaction(function () use ($user, $address, $remark, $items, $coupon) {
             // 更新此地址的最后使用时间
             $address->update(['last_used_at' => Carbon::now()]);
             // 创建一个订单
             $order = new Order([
-                'address'      => [ // 将地址信息放入订单中
-                    'address'       => $address->full_address,
-                    'zip'           => $address->zip,
-                    'contact_name'  => $address->contact_name,
+                'address' => [ // 将地址信息放入订单中
+                    'address' => $address->full_address,
+                    'zip' => $address->zip,
+                    'contact_name' => $address->contact_name,
                     'contact_phone' => $address->contact_phone,
                 ],
-                'remark'       => $remark,
+                'remark' => $remark,
                 'total_amount' => 0,
             ]);
             // 订单关联到当前用户
@@ -51,6 +58,20 @@ class OrderService
                     throw new InvalidRequestException('该商品库存不足');
                 }
             }
+
+            if ($coupon) {
+                // 校验优惠券，核对总金额
+                $coupon->checkAvailable($totalAmount);
+                // 计算使用优惠券后的支付金额
+                $totalAmount = $coupon->getAdjustedPrice($totalAmount);
+                // 关联订单和优惠券
+                $order->couponCode()->associate($coupon);
+                // 增加优惠券的使用量，需判断返回值
+                if ($coupon->changeUsed() <= 0) {
+                    throw new CouponCodeUnavailableException('该优惠券已被兑完');
+                }
+            }
+
             // 更新订单金额
             $order->update(['total_amount' => $totalAmount]);
 
