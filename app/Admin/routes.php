@@ -20,5 +20,6 @@ Route::group([
     $router->post('orders/{order}/refund', 'OrdersController@handleRefund')->name('admin.orders.handle_refund');
 
     $router->resource('coupon_codes', CouponCodesController::class);
+    $router->resource('categories', CategoriesController::class);
 
 });
