@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Exceptions\InvalidRequestException;
-use App\Models\OrderItem;
+use App\Models\Category;
 use App\Models\Product;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
+use App\Exceptions\InvalidRequestException;
 
 class ProductsController extends Controller
 {
@@ -27,6 +28,19 @@ class ProductsController extends Controller
             });
         }
 
+        // 如果请求参数有 category_id，且有响应的类目
+        if ($request->input('category_id') && $category = Category::find($request->input('category_id'))) {
+            // 如果是一个父类目，筛选类目下的所有子类目
+            if ($category->is_directory) {
+                $builder->whereHas('category', function ($query) use ($category) {
+                    $query->where('path', 'like', $category->path . $category->id . '-%');
+                });
+            } else {
+                // 不是一个目录
+                $builder->where('category_id', $category->id);
+            }
+        }
+
         // 是否有提交 order 参数，如果有就赋值给 $order，使用 order 参数控制商品排序
         if ($order = $request->input('order', '')) {
             if (preg_match('/^(.+)_(asc|desc)$/', $order, $m)) {
@@ -44,7 +58,8 @@ class ProductsController extends Controller
             'filters' => [
                 'search' => $search,
                 'order' => $order,
-            ]
+            ],
+            'category' => $category ?? null,
         ]);
     }
 
