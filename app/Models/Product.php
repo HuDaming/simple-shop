@@ -28,4 +28,9 @@ class Product extends Model
         }
         return \Storage::disk('admin')->url($this->attributes['cover']);
     }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }
