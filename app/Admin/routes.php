@@ -21,5 +21,6 @@ Route::group([
 
     $router->resource('coupon_codes', CouponCodesController::class);
     $router->resource('categories', CategoriesController::class);
+    $router->get('api/categories', 'CategoriesController@apiIndex');
 
 });

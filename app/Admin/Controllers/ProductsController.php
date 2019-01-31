@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Http\Controllers\Controller;
 use Encore\Admin\Controllers\HasResourceActions;
@@ -77,9 +78,13 @@ class ProductsController extends Controller
     protected function grid()
     {
         $grid = new Grid(new Product);
+        // 使用 with 预加载商品类目数据
+        $grid->model()->with(['category']);
 
-        $grid->id('ID');
+        $grid->id('ID')->sortable();
         $grid->title('商品名称');
+
+        $grid->column('category.name', '类目');
 
         $grid->on_sale('已上架')->display(function ($value) {
             return $value ? '是' : '否';
@@ -143,6 +148,13 @@ class ProductsController extends Controller
 
         $form->text('title', '商品名称')->rules('required');
 
+        $form->select('category_id', '类目')->options(function ($id) {
+            $category = Category::find($id);
+            if ($category) {
+                return [$category->id => $category->full_name];
+            }
+        })->ajax('/admin/api/categories?is_directory=0');
+
         $form->image('cover', '封面图片')->rules('required|image');
 
         $form->editor('description', '商品描述')->rules('required');
@@ -158,8 +170,8 @@ class ProductsController extends Controller
 
         $form->saving(function (Form $form) {
             $form->model()->price = collect($form->input('skus'))
-                                        ->where(Form::REMOVE_FLAG_NAME, 0)
-                                        ->min('price') ?: 0;
+                ->where(Form::REMOVE_FLAG_NAME, 0)
+                ->min('price') ?: 0;
         });
 
         return $form;
