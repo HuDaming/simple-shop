@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\OrderItem;
+use App\Services\CategoryService;
 use Illuminate\Http\Request;
 use App\Exceptions\InvalidRequestException;
 
 class ProductsController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, CategoryService $categoryService)
     {
         // 创建一个查询构造器
         $builder = Product::query()->where('on_sale', true);
@@ -60,6 +61,8 @@ class ProductsController extends Controller
                 'order' => $order,
             ],
             'category' => $category ?? null,
+            // 类目树
+            'categoryTree' => $categoryService->getCategoryTree(),
         ]);
     }
 
