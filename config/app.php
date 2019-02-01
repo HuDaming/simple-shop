@@ -229,4 +229,7 @@ return [
     // 设置订单关闭时间
     'order_ttl' => 1800,
 
+    // 内网穿透配置
+    'ngrok_url' => env('NGROK_URL'),
+
 ];
