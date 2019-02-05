@@ -30,4 +30,9 @@ class CrowdfundingProduct extends Model
 
         return floatval(number_format($value * 100, 2, '.', ''));
     }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
 }
