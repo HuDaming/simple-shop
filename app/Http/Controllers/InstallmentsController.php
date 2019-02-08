@@ -6,6 +6,7 @@ use App\Models\Installment;
 use Illuminate\Http\Request;
 use App\Exceptions\InvalidRequestException;
 
+use Endroid\QrCode\QrCode;
 use App\Events\OrderPaid;
 use Carbon\Carbon;
 
@@ -81,28 +82,73 @@ class InstallmentsController extends Controller
         if (!in_array($data->trade_status, ['TRADE_SUCCESS', 'TRADE_FINISHED'])) {
             return app('alipay')->success();
         }
+        if ($this->paid($data->out_trade_no, 'alipay', $data->trade_no)) {
+            return app('alipay')->success();
+        }
+
+        return 'fail';
+    }
+
+    public function payByWechat(Installment $installment)
+    {
+        if ($installment->order->closed) {
+            throw new InvalidRequestException('对应的商品订单已被关闭');
+        }
+        if ($installment->status === Installment::STATUS_FINISHED) {
+            throw new InvalidRequestException('该分期订单已结清');
+        }
+        if (!$nextItem = $installment->items()->whereNull('paid_at')->orderBy('sequence')->first()) {
+            throw new InvalidRequestException('该分期订单已结清');
+        }
+
+        $wechatOrder = app('wechat_pay')->scan([
+            'out_trade_no' => $installment->no . '_' . $nextItem->sequence,
+            'total_fee' => $nextItem->total * 100,
+            'body' => '支付 Laravel Shop 的分期订单：' . $installment->no,
+            'notify_url' => ngrok_url('installment.wechat.notify'),
+        ]);
+        // 构造 QrCode 参数
+        $qrCode = new QrCode($wechatOrder->code_url);
+
+        // 将二维码图片以字符串方式输入
+        return response($qrCode->writeString(), 200, ['Content-Type' => $qrCode->getContentType()]);
+    }
+
+    // 微信支付回调通知
+    public function wechatNotify()
+    {
+        $data = app('wechat_pay')->verify();
+        if ($this->paid($data->out_trade_no, 'wechat', $data->transaction_id)) {
+            return app('wechat_pay')->success();
+        }
+
+        return 'fail';
+    }
+
+    protected function paid($outTradeNo, $paymentMethod, $paymentNo)
+    {
         // 解析支付订单号获取分期流水号和还款计划编号
-        list($no, $sequence) = explode('_', $data->out_trade_no);
+        list($no, $sequence) = explode('_', $outTradeNo);
         // 检查分期流水号对应的分期计划
         if (!$installment = Installment::where('no', $no)->first()) {
-            return 'fail';
+            return false;
         }
         if (!$item = $installment->items()->where('sequence', $sequence)->first()) {
-            return 'fail';
+            return false;
         }
 
         // 如果改还款计划的支付状态是已支付，则告知支付宝改订单已完成，不再执行后续逻辑
         if ($item->paid_at) {
-            return app('alipay')->success();
+            return true;
         }
 
         // 启用事务处理，保证数据一致性
-        \DB::transaction(function () use ($data, $no, $installment, $item) {
+        \DB::transaction(function () use ($paymentNo, $paymentMethod, $no, $installment, $item) {
             // 更新还款计划
             $item->update([
                 'paid_at' => Carbon::now(), // 支付时间
                 'payment_method' => 'alipay',
-                'payment_no' => $data->trade_no,
+                'payment_no' => $paymentNo,
             ]);
 
             // 如果这是第一笔还款
@@ -126,6 +172,6 @@ class InstallmentsController extends Controller
             }
         });
 
-        return app('alipay')->success();
+        return true;
     }
 }
