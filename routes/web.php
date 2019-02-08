@@ -58,6 +58,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::post('payment/{order}/installment', 'PaymentController@payByInstallment')->name('payment.installment');
 
     Route::get('installments/index', 'InstallmentsController@index')->name('installments.index');
+    Route::get('installments/{installment}/show', 'InstallmentsController@show')->name('installments.show');
 
     Route::get('coupon_codes/{code}', 'CouponCodesController@show')->name('coupon_codes.show');
 

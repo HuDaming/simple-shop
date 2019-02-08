@@ -143,7 +143,7 @@ body {
   .filters {
     font-size: 12px;
     margin-bottom: 10px;
-    &>.row {
+    & > .row {
       border-top: 1px solid #eee;
       border-bottom: 1px solid #eee;
       margin: 0 -20px;
@@ -460,7 +460,7 @@ body {
   }
   .order-summary {
     width: 50%;
-    font-family: Verdana,Tahoma,Helvetica,Arial;
+    font-family: Verdana, Tahoma, Helvetica, Arial;
     .total-amount {
       font-weight: bolder;
       font-size: 14px;
@@ -519,7 +519,7 @@ body {
       & > input {
         position: absolute;
         top: -9999px;
-        clip: rect(0,0,0,0);
+        clip: rect(0, 0, 0, 0);
       }
       & > label {
         float: right;
@@ -583,5 +583,64 @@ body {
   }
   .dropdown-menu .dropdown-submenu {
     width: auto;
+  }
+}
+
+.installments-show-page {
+  font-size: 12px;
+  .table {
+    margin-bottom: 0;
+    .repaid {
+      color: green;
+    }
+    .overdue {
+      color: red;
+    }
+  }
+  .item-amount {
+    padding-right: 20px;
+    width: 200px;
+  }
+  .installment-top {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 20px;
+  }
+  .installment-info {
+    width: 50%;
+    .line {
+      display: flex;
+      flex-direction: row;
+      .line-label {
+        width: 80px;
+        text-align: right;
+      }
+      .line-value {
+        padding-left: 20px;
+        flex-shrink: 100;
+      }
+    }
+    border-right: 1px solid #ddd;
+  }
+  .installment-next {
+    width: 50%;
+    font-family: Verdana, Tahoma, Helvetica, Arial;
+    .installment-clear {
+      font-weight: bolder;
+      font-size: 16px;
+    }
+    .total-amount {
+      font-weight: bolder;
+      font-size: 14px;
+    }
+    .value {
+      display: inline-block;
+      width: 150px;
+      padding-right: 20px;
+    }
+  }
+  .payment-buttons {
+    margin-top: 10px;
+    padding-right: 10px;
   }
 }
