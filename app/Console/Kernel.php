@@ -28,6 +28,8 @@ class Kernel extends ConsoleKernel
         //          ->hourly();
         // 每隔一分钟检查一次众筹商品
         $schedule->command('cron:finish-crowdfunding')->everyMinute();
+        // 每天凌晨 00:00 计算分期付款的逾期费
+        $schedule->command('cron:calculate-installment-fine')->daily();
     }
 
     /**
