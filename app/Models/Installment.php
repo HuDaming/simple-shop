@@ -51,6 +51,26 @@ class Installment extends Model
         return $this->hasMany(InstallmentItem::class);
     }
 
+    public function refreshRefundStatus()
+    {
+        // 设定一个全部退款成功标志
+        $allSuccess = true;
+        // 重新加载 items，保证与数据库中数据同步
+        foreach ($this->items as $item) {
+            if ($item->paid_at
+                && $item->refund_status !== InstallmentItem::REFUND_STATUS_SUCCESS) {
+                $allSuccess = false;
+                break;
+            }
+        }
+        // 如果所有退款都成功，更新订单退款状态为退款成功
+        if ($allSuccess) {
+            $this->order->update([
+                'refund_status' => Order::REFUND_STATUS_SUCCESS,
+            ]);
+        }
+    }
+
     public static function findAvailableNo()
     {
         $prefix = date('YmdHis');

@@ -24,6 +24,7 @@ class CreateInstallmentItemsTable extends Migration
             $table->dateTime('due_date');
             $table->dateTime('paid_at')->nullable();
             $table->string('payment_method')->nullable();
+            $table->string('payment_no')->nullable();
             $table->string('refund_status')->default(\App\Models\InstallmentItem::REFUND_STATUS_PENDING);
             $table->timestamps();
         });
