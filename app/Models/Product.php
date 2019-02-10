@@ -46,4 +46,19 @@ class Product extends Model
     {
         return $this->hasOne(CrowdfundingProduct::class);
     }
+
+    public function properties()
+    {
+        return $this->hasMany(ProductProperty::class);
+    }
+
+    public function getGroupedPropertiesAttribute()
+    {
+        return $this->properties
+            // 按照属性名聚合
+            ->groupBy('name')
+            ->map(function ($properties) {
+                return $properties->pluck('value')->all();
+            });
+    }
 }
