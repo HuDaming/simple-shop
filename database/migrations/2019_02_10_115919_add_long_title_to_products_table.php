@@ -14,7 +14,7 @@ class AddLongTitleToProductsTable extends Migration
     public function up()
     {
         Schema::table('products', function (Blueprint $table) {
-            //
+            $table->string('long_title')->after('title');
         });
     }
 
@@ -26,7 +26,7 @@ class AddLongTitleToProductsTable extends Migration
     public function down()
     {
         Schema::table('products', function (Blueprint $table) {
-            //
+            $table->dropColumn('long_title');
         });
     }
 }

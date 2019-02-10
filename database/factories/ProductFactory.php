@@ -24,6 +24,7 @@ $factory->define(App\Models\Product::class, function (Faker $faker) {
 
     return [
         'title'        => $faker->word,
+        'long_title'        => $faker->sentence,
         'description'  => $faker->sentence,
         'cover'        => $cover,
         'on_sale'      => true,
