@@ -129,8 +129,7 @@ class ProductsController extends Controller
                         // 字段名
                         'path' => 'properties',
                         'query' => [
-                            ['term' => ['properties.name' => $name]],
-                            ['term' => ['properties.value' => $value]],
+                            ['term' => ['properties.search_value' => $filter]],
                         ],
                     ],
                 ];
