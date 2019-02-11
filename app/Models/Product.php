@@ -24,6 +24,32 @@ class Product extends Model
         'on_sale' => 'boolean',
     ];
 
+    public function toESArray()
+    {
+        // 只获取需要的字段
+        $arr = array_only($this->toArray(), [
+            'id', 'type', 'title', 'category_id', 'long_title',
+            'on_sale', 'rating', 'sold_count', 'review_count', 'price',
+        ]);
+
+        // 如果商品有类目，则 category 字段为类目名数组，否则为空
+        $arr['category'] = $this->category ? explode(' - ', $this->category->full_name) : '';
+        // 类目的 path 字段
+        $arr['category_path'] = $this->category ? $this->category->path : '';
+        // 去掉描述中的 html 标签
+        $arr['description'] = strip_tags($this->description);
+        // 只取出需要的 SKU 字段
+        $arr['skus'] = $this->skus->map(function (ProductSku $sku) {
+            return array_only($sku->toArray(), ['title', 'description', 'price']);
+        });
+        // 只取出需要的 property 字段
+        $arr['properties'] = $this->properties->map(function (ProductProperty $property) {
+            return array_only($property->toArray(), ['name', 'value']);
+        });
+
+        return $arr;
+    }
+
     public function skus()
     {
         return $this->hasMany(ProductSku::class);
