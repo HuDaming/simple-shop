@@ -85,6 +85,58 @@ class ProductsController extends Controller
             }
         }
 
+        // 当用户输入了搜索词或者使用了类目筛选的时候才会做聚合
+        if ($search || isset($category)) {
+            $params['body']['aggs'] = [
+                'properties' => [
+                    'nested' => [
+                        'path' => 'properties',
+                    ],
+                    'aggs' => [
+                        'properties' => [
+                            'terms' => [
+                                'field' => 'properties.name',
+                            ],
+                            'aggs' => [
+                                'value' => [
+                                    'terms' => [
+                                        'field' => 'properties.value',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+        }
+
+        // 从请求参数中获取 filters
+        // 定义一个属性过滤数组
+        $propertyFilters = [];
+        if ($filtersString = $request->input('filters')) {
+            // 将获取到的字符串用符号 | 拆分成数组
+            $filterArray = explode('|', $filtersString);
+            foreach ($filterArray as $filter) {
+                // 将字符串用 : 拆分成两部分，分别赋值给 $name 和 $value
+                list($name, $value) = explode(':', $filter);
+                // 将筛选的属性添加到数组中
+                $propertyFilters[$name] = $value;
+
+                // 添加到 filter 类型中
+                $params['body']['query']['bool']['filter'][] = [
+                    // 由于筛选的是 nested 类型下的属性，因此需要用 nested 查询
+                    'nested' => [
+                        // 字段名
+                        'path' => 'properties',
+                        'query' => [
+                            ['term' => ['properties.name' => $name]],
+                            ['term' => ['properties.value' => $value]],
+                        ],
+                    ],
+                ];
+            }
+        }
+
         $result = app('es')->search($params);
 
         $productIds = collect($result['hits']['hits'])->pluck('_id')->all();
@@ -99,6 +151,24 @@ class ProductsController extends Controller
             'path' => route('products.index', false), // 构建分页 url
         ]);
 
+        $properties = [];
+        // 如果结果中有 aggregations 字段，说明做了分面搜索
+        if (isset($result['aggregations'])) {
+            // 返回值转为集合
+            $properties = collect($result['aggregations']['properties']['properties']['buckets'])
+                ->map(function ($buckets) {
+                    // 通过 map 取出需要的字段
+                    return [
+                        'key' => $buckets['key'],
+                        'values' => collect($buckets['value']['buckets'])->pluck('key')->all(),
+                    ];
+                })
+                ->filter(function ($property) use ($propertyFilters) {
+                    // 过滤掉只剩下一个值 或者 已经在筛选条件里的属性
+                    return count($property['values']) > 1 && !isset($propertyFilters[$property['key']]);
+                });
+        }
+
         return view('products.index', [
             'products' => $pager,
             'filters' => [
@@ -106,6 +176,8 @@ class ProductsController extends Controller
                 'order' => $order,
             ],
             'category' => $category ?? null,
+            'properties' => $properties,
+            'propertyFilters' => $propertyFilters,
         ]);
     }
 
