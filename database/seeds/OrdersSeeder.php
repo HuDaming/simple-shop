@@ -20,10 +20,10 @@ class OrdersSeeder extends Seeder
         foreach ($orders as $order) {
             // 每笔订单随机 1 - 3 个商品
             $items = factory(OrderItem::class, random_int(1, 3))->create([
-                'order_id' => $orders->id,
-                'rating' => $orders->reviewed ? random_int(1, 5) : null,
-                'review' => $orders->reviewed ? $faker->sentence : null,
-                'reviewed_at' => $orders->reviewed ? $faker->dateTimeBetween($orders->paid_at) : null,
+                'order_id' => $order->id,
+                'rating' => $order->reviewed ? random_int(1, 5) : null,
+                'review' => $order->reviewed ? $faker->sentence : null,
+                'reviewed_at' => $order->reviewed ? $faker->dateTimeBetween($order->paid_at) : null,
             ]);
 
             // 计算总价
