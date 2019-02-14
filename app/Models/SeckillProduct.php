@@ -18,12 +18,12 @@ class SeckillProduct extends Model
         return $this->belongsTo(Product::class);
     }
 
-    public function getIsBeforeStartAtAttribute()
+    public function getIsBeforeStartAttribute()
     {
         return Carbon::now()->lt($this->start_at);
     }
 
-    public function getIsAfterEndAtAttribute()
+    public function getIsAfterEndAttribute()
     {
         return Carbon::now()->gt($this->end_at);
     }

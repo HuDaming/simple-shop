@@ -228,6 +228,8 @@ return [
 
     // 设置订单关闭时间
     'order_ttl' => 1800,
+    // 秒杀订单关闭时间
+    'seckill_order_ttl' => 600,
 
     // 分期费率，key 为期数， value 为费率
     'installment_fee_rate' => [

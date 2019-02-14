@@ -51,6 +51,7 @@ Route::group(['middleware' => ['auth', 'verified']], function () {
     Route::post('orders/{order}/apply_refund', 'OrdersController@applyRefund')->name('orders.apply_refund');
 
     Route::post('crowdfunding_orders', 'OrdersController@crowdfunding')->name('crowdfunding_orders.store');
+    Route::post('seckill_orders', 'OrdersController@seckill')->name('seckill_orders.store');
 
     Route::get('payment/{order}/alipay', 'PaymentController@payByAlipay')->name('payment.alipay');
     Route::get('payment/{order}/wechat', 'PaymentController@payByWechat')->name('payment.wechat');
