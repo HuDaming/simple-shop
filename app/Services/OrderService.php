@@ -189,6 +189,8 @@ class OrderService
             if ($sku->decreaseStock(1) <= 0) {
                 throw new InvalidRequestException('该商品库存不足');
             }
+            // 更新缓存 -1
+            \Redis::decr('seckill_sku_'.$sku->id);
 
             return $order;
         });
